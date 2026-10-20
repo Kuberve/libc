@@ -115,6 +115,17 @@ pub fn sys_try_recv(msg: *mut Message) -> i64 {
     ret
 }
 
+pub fn sys_sbrk(delta: i64) -> u64 {
+    let ret: u64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0",
+            n = const sys_num::SBRK,
+            inlateout("x0") delta => ret,
+            out("x8") _);
+    }
+    ret
+}
+
 // ============================================================
 // Heap (bump allocator)
 // HEAP_START/END должны совпадать с mmu.rs L2[4] региона
@@ -122,23 +133,40 @@ pub fn sys_try_recv(msg: *mut Message) -> i64 {
 pub const HEAP_START: usize = 0x40800000;
 pub const HEAP_END:   usize = 0x40A00000;
 
-static HEAP_NEXT: AtomicUsize = AtomicUsize::new(0);
+const CHUNK_SIZE: usize = 64 * 1024;  // 64 KB за раз
+
+static CHUNK_PTR: AtomicUsize = AtomicUsize::new(0);
+static CHUNK_END: AtomicUsize = AtomicUsize::new(0);
 
 pub struct BumpAlloc;
 
 unsafe impl GlobalAlloc for BumpAlloc {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let mut next = HEAP_NEXT.load(Ordering::Relaxed);
-        if next == 0 { next = HEAP_START; }
         let align = layout.align().max(8);
-        let aligned = (next + align - 1) & !(align - 1);
-        let end = match aligned.checked_add(layout.size()) {
-            Some(e) => e,
-            None => return ptr::null_mut(),
-        };
-        if end > HEAP_END { return ptr::null_mut(); }
-        HEAP_NEXT.store(end, Ordering::Relaxed);
-        aligned as *mut u8
+        let size = layout.size();
+
+        loop {
+            let ptr = CHUNK_PTR.load(Ordering::Relaxed);
+            let end = CHUNK_END.load(Ordering::Relaxed);
+
+            if ptr != 0 {
+                let aligned = (ptr + align - 1) & !(align - 1);
+                let new_end = aligned.checked_add(size).unwrap_or(usize::MAX);
+                if new_end <= end {
+                    CHUNK_PTR.store(new_end, Ordering::Relaxed);
+                    return aligned as *mut u8;
+                }
+            }
+
+            // chunk кончился или не выделен — refill
+            let need = (size + align).max(CHUNK_SIZE);
+            let old_brk = sys_sbrk(need as i64);
+            if old_brk == u64::MAX {
+                return ptr::null_mut();
+            }
+            CHUNK_PTR.store(old_brk as usize, Ordering::Relaxed);
+            CHUNK_END.store(old_brk as usize + need, Ordering::Relaxed);
+        }
     }
 
     unsafe fn dealloc(&self, _: *mut u8, _: Layout) {}
