@@ -299,3 +299,10 @@ pub mod uart {
         }
     }
 }
+
+pub mod flags {
+    pub const O_RDONLY: u64 = 0;
+    pub const O_CREAT:  u64 = 1;
+    pub const O_TRUNC:  u64 = 2;
+    pub const O_APPEND: u64 = 4;
+}
