@@ -7,6 +7,17 @@ use core::ptr;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
 pub use kuberve_abi::Message;
+
+/// Для tag=1 (WRITE): прочитать len и байты из Message.data.
+/// Возвращает срез байт (до 48).
+pub fn write_payload(msg: &Message) -> &[u8] {
+    let len = msg.data[0] as usize;
+    let len = if len > 48 { 48 } else { len };
+    unsafe {
+        core::slice::from_raw_parts(&msg.data[1] as *const u64 as *const u8, len)
+    }
+}
+
 pub use kuberve_abi::sys as sys_num;
 
 // ============================================================
