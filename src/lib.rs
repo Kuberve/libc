@@ -126,6 +126,43 @@ pub fn sys_sbrk(delta: i64) -> u64 {
     ret
 }
 
+pub fn sys_open(path: &str, flags: u64) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0",
+            n = const sys_num::OPEN,
+            inlateout("x0") path.as_ptr() as u64 => ret,
+            in("x1") path.len() as u64,
+            in("x2") flags,
+            out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_read(fd: i64, buf: *mut u8, len: u64) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0",
+            n = const sys_num::READ,
+            inlateout("x0") fd as u64 => ret,
+            in("x1") buf as u64,
+            in("x2") len,
+            out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_close(fd: i64) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0",
+            n = const sys_num::CLOSE,
+            inlateout("x0") fd as u64 => ret,
+            out("x8") _);
+    }
+    ret
+}
+
 // ============================================================
 // Heap (bump allocator)
 // HEAP_START/END должны совпадать с mmu.rs L2[4] региона
