@@ -176,6 +176,59 @@ pub fn sys_write_file(fd: i64, buf: *const u8, len: u64) -> i64 {
     ret
 }
 
+pub const SYS_SOCKET:   u64 = sys_num::SOCKET;
+pub const SYS_BIND:     u64 = sys_num::BIND;
+pub const SYS_SENDTO:   u64 = sys_num::SENDTO;
+pub const SYS_RECVFROM: u64 = sys_num::RECVFROM;
+
+pub fn sys_socket(domain: u64, kind: u64) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0", n = const SYS_SOCKET,
+            inlateout("x0") domain => ret,
+            in("x1") kind, out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_bind(fd: i64, port: u64) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0", n = const SYS_BIND,
+            inlateout("x0") fd as u64 => ret,
+            in("x1") port, out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_sendto(fd: i64, buf: *const u8, len: u64, dst_ip: u32, dst_port: u64) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0", n = const SYS_SENDTO,
+            inlateout("x0") fd as u64 => ret,
+            in("x1") buf as u64, in("x2") len,
+            in("x3") dst_ip as u64, in("x4") dst_port, out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_recvfrom(fd: i64, buf: *mut u8, len: u64, src_ip_out: *mut u8, src_port_out: *mut u16) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0", n = const SYS_RECVFROM,
+            inlateout("x0") fd as u64 => ret,
+            in("x1") buf as u64, in("x2") len,
+            in("x3") src_ip_out as u64, in("x4") src_port_out as u64, out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_yield() {
+    unsafe {
+        asm!("mov x8, {n}", "svc #0", n = const sys_num::YIELD, out("x8") _, out("x0") _);
+    }
+}
+
 // ============================================================
 // Heap (bump allocator)
 // HEAP_START/END должны совпадать с mmu.rs L2[4] региона
