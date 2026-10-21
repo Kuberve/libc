@@ -229,6 +229,36 @@ pub fn sys_yield() {
     }
 }
 
+pub fn sys_connect(fd: i64, dst_ip: u32, dst_port: u64) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0", n = const sys_num::CONNECT,
+            inlateout("x0") fd as u64 => ret,
+            in("x1") dst_ip as u64, in("x2") dst_port, out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_tcp_send(fd: i64, buf: *const u8, len: u64) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0", n = const sys_num::TCP_SEND,
+            inlateout("x0") fd as u64 => ret,
+            in("x1") buf as u64, in("x2") len, out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_tcp_recv(fd: i64, buf: *mut u8, len: u64) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0", n = const sys_num::TCP_RECV,
+            inlateout("x0") fd as u64 => ret,
+            in("x1") buf as u64, in("x2") len, out("x8") _);
+    }
+    ret
+}
+
 // ============================================================
 // Heap (bump allocator)
 // HEAP_START/END должны совпадать с mmu.rs L2[4] региона
