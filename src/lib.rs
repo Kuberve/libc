@@ -259,6 +259,19 @@ pub fn sys_tcp_recv(fd: i64, buf: *mut u8, len: u64) -> i64 {
     ret
 }
 
+pub fn sys_spawn(path: &str, priority: u64) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0",
+            n = const sys_num::SPAWN,
+            inlateout("x0") path.as_ptr() as u64 => ret,
+            in("x1") path.len() as u64,
+            in("x2") priority,
+            out("x8") _);
+    }
+    ret
+}
+
 // ============================================================
 // Heap (bump allocator)
 // HEAP_START/END должны совпадать с mmu.rs L2[4] региона
@@ -352,7 +365,7 @@ pub mod uart {
 
     pub fn putc(c: u8) {
         unsafe {
-            while (*UART_FR & (1 << 5)) != 0 {}
+            while core::ptr::read_volatile(UART_FR) & (1 << 5) != 0 {}
             core::ptr::write_volatile(UART_DR, c as u32);
         }
     }
