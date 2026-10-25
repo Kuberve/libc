@@ -20,6 +20,7 @@ pub fn write_payload(msg: &Message) -> &[u8] {
 
 pub use kuberve_abi::sys as sys_num;
 pub use kuberve_abi::Stat;
+pub use kuberve_abi::DirEntry;
 
 // ============================================================
 // Syscalls
@@ -303,6 +304,56 @@ pub fn sys_stat(path: &str, out: *mut Stat) -> i64 {
             inlateout("x0") path.as_ptr() as u64 => ret,
             in("x1") path.len() as u64,
             in("x2") out as u64,
+            out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_mkdir(path: &str) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0",
+            n = const sys_num::MKDIR,
+            inlateout("x0") path.as_ptr() as u64 => ret,
+            in("x1") path.len() as u64,
+            out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_unlink(path: &str) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0",
+            n = const sys_num::UNLINK,
+            inlateout("x0") path.as_ptr() as u64 => ret,
+            in("x1") path.len() as u64,
+            out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_rmdir(path: &str) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0",
+            n = const sys_num::RMDIR,
+            inlateout("x0") path.as_ptr() as u64 => ret,
+            in("x1") path.len() as u64,
+            out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_readdir(path: &str, buf: *mut DirEntry, max_entries: u64) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0",
+            n = const sys_num::READDIR,
+            inlateout("x0") path.as_ptr() as u64 => ret,
+            in("x1") path.len() as u64,
+            in("x2") buf as u64,
+            in("x3") max_entries,
             out("x8") _);
     }
     ret
