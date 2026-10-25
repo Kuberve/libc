@@ -272,6 +272,28 @@ pub fn sys_spawn(path: &str, priority: u64) -> i64 {
     ret
 }
 
+pub fn sys_kill(pid: u64) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0",
+            n = const sys_num::KILL,
+            inlateout("x0") pid => ret,
+            out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_wait(pid: u64) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0",
+            n = const sys_num::WAIT,
+            inlateout("x0") pid => ret,
+            out("x8") _);
+    }
+    ret
+}
+
 // ============================================================
 // Heap (bump allocator)
 // HEAP_START/END должны совпадать с mmu.rs L2[4] региона
