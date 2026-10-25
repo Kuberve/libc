@@ -19,6 +19,7 @@ pub fn write_payload(msg: &Message) -> &[u8] {
 }
 
 pub use kuberve_abi::sys as sys_num;
+pub use kuberve_abi::Stat;
 
 // ============================================================
 // Syscalls
@@ -289,6 +290,19 @@ pub fn sys_wait(pid: u64) -> i64 {
         asm!("mov x8, {n}", "svc #0",
             n = const sys_num::WAIT,
             inlateout("x0") pid => ret,
+            out("x8") _);
+    }
+    ret
+}
+
+pub fn sys_stat(path: &str, out: *mut Stat) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0",
+            n = const sys_num::STAT,
+            inlateout("x0") path.as_ptr() as u64 => ret,
+            in("x1") path.len() as u64,
+            in("x2") out as u64,
             out("x8") _);
     }
     ret
