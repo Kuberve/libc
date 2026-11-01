@@ -178,6 +178,20 @@ pub fn sys_write_file(fd: i64, buf: *const u8, len: u64) -> i64 {
     ret
 }
 
+pub fn sys_gui_create_window(w: u32, h: u32, title: &str) -> i64 {
+    let ret: i64;
+    unsafe {
+        asm!("mov x8, {n}", "svc #0",
+            n = const sys_num::GUI_CREATE_WINDOW,
+            inlateout("x0") w as u64 => ret,
+            in("x1") h as u64,
+            in("x2") title.as_ptr() as u64,
+            in("x3") title.len() as u64,
+            out("x8") _);
+    }
+    ret
+}
+
 pub const SYS_SOCKET:   u64 = sys_num::SOCKET;
 pub const SYS_BIND:     u64 = sys_num::BIND;
 pub const SYS_SENDTO:   u64 = sys_num::SENDTO;
