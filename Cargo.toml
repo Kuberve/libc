@@ -1,7 +1,12 @@
 [package]
 name = "kuberve-libc"
-version = "0.1.0"
+version = "0.14.4"
 edition = "2021"
+license = "LGPL-3.0-or-later"
+repository = "https://github.com/Kuberve/libc"
+authors = ["Simonov Zakhar <zaharsimonov6087@gmail.com> (BlackZakha)"]
+description = "Kuberve userspace library — syscall wrappers, heap allocator, UART"
+readme = "README.md"
 
 [lib]
 name = "kuberve_libc"
@@ -14,4 +19,4 @@ panic = "abort"
 panic = "abort"
 
 [dependencies]
-kuberve-abi = { path = "../abi" }
+kuberve-abi = { git = "https://github.com/Kuberve/abi" }
