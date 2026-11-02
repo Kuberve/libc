@@ -20,3 +20,7 @@ panic = "abort"
 
 [dependencies]
 kuberve-abi = { git = "https://github.com/Kuberve/abi" }
+
+[lints.rust]
+static_mut_refs = "allow"
+dead_code = "allow"

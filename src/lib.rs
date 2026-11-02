@@ -1,10 +1,14 @@
 #![no_std]
+#![allow(static_mut_refs)]
 
 use core::arch::asm;
 use core::alloc::{GlobalAlloc, Layout};
 use core::fmt;
 use core::ptr;
 use core::sync::atomic::{AtomicUsize, Ordering};
+
+pub mod http;
+pub use http::{http_get, HttpError};
 
 pub use kuberve_abi::Message;
 
